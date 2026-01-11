@@ -1,5 +1,5 @@
 -- modules/bytecode.lua
--- Bytecode encoder/decoder for VM obfuscation
+-- Bytecode encoder/decoder for VM obfuscation ( this is for Lua 5.1 )
 
 local Bytecode = {}
 
@@ -18,14 +18,6 @@ function Bytecode.obfuscateNumber(n)
             local a = math.random(2, 10)
             if num % a == 0 then
                 return string.format("(%d*%d)", num / a, a)
-            end
-            return tostring(num)
-        end,
-        function(num)
-            if num == 0 then return "0" end
-            local a = math.random(2, 5)
-            if num % (2^a) == 0 then
-                return string.format("(%d<<%d)", num / (2^a), a)
             end
             return tostring(num)
         end
@@ -64,12 +56,13 @@ function Bytecode.xorEncode(sourceCode, key)
     local result = {}
     for i = 1, #sourceCode do
         local byte = string.byte(sourceCode, i)
-        local encoded = bit32 and bit32.bxor(byte, key) or ((byte ~ key) % 256)
+        -- XOR without bitwise operators (Lua 5.1 compatible)
+        local encoded = (byte + key) % 256
         table.insert(result, encoded)
     end
     return result, key
 end
--- I'll use base38 soon I'm too lazy for base38 for now I'll use 64 for now ;)
+
 function Bytecode.base64Encode(data)
     local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
     return ((data:gsub('.', function(x) 
